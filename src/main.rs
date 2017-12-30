@@ -1,5 +1,7 @@
 extern crate libc;
 
+use std::ffi::CString;
+
 /// This is a opaque rust equivalent for comedi_t inside libcomedi.h
 enum comedi_t {}
 
@@ -14,8 +16,11 @@ extern "C" {
 
 #[cfg(test)]
 mod tests {
+    use *;
+    
     #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+    fn open_comedi_device() {
+        let comedi = unsafe{ comedi_open(CString::new("/dev/comedi0").unwrap().as_ptr()) };
+        assert!(!comedi.is_null());
     }
 }
