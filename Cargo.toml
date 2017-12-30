@@ -1,0 +1,6 @@
+[package]
+name = "ttk4145_hw_server"
+version = "0.1.0"
+authors = ["Kjetil Kjeka"]
+
+[dependencies]
