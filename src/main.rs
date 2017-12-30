@@ -2,6 +2,8 @@ extern crate libc;
 
 use std::ffi::CString;
 
+mod channel;
+
 /// This is a opaque rust equivalent for comedi_t inside libcomedi.h
 enum comedi_t {}
 
