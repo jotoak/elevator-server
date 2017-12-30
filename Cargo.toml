@@ -4,3 +4,4 @@ version = "0.1.0"
 authors = ["Kjetil Kjeka"]
 
 [dependencies]
+libc = "0.2.34"
