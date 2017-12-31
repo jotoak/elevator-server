@@ -139,6 +139,20 @@ impl ElevatorInterface {
             data != 0
         }
     }
+
+    fn set_stop_button_lamp(&self, on_not_off: bool) {
+        unsafe {
+            comedi_dio_write(self.0, channel::LIGHT_STOP >> 8, channel::LIGHT_STOP & 0xff, on_not_off as libc::c_uint);
+        }
+    }
+
+    fn read_stop_button(&self) -> bool {
+        unsafe{
+            let mut data: libc::c_uint = 0;
+            comedi_dio_read(self.0, channel::STOP >> 8, channel::STOP & 0xff, &mut data);
+            data != 0
+        }
+    }
 }
 
 fn main() {
@@ -220,6 +234,19 @@ mod tests {
             while !elevator.read_floor_button(ButtonType::HallDown, i as u8 + 1) {}
             elevator.set_floor_button_lamp(ButtonType::HallDown, i as u8 + 1, false);
         }
+    }
+
+    #[test]
+    fn test_stop_button() {
+        let elevator = ELEVATOR.lock().unwrap();
+        
+        elevator.set_stop_button_lamp(true);
+        thread::sleep(Duration::new(0, 200000000));
+        elevator.set_stop_button_lamp(false);
+        thread::sleep(Duration::new(0, 200000000));
+        elevator.set_stop_button_lamp(true);
+        while !elevator.read_stop_button() {}
+        elevator.set_stop_button_lamp(false);
     }
 
 }
