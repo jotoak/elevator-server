@@ -23,6 +23,7 @@ extern "C" {
 }
 
 enum Command {
+    Reserved,
     WriteMotorDirection(ElevatorDirection),
     WriteOrderButtonLight(ButtonType, u8, bool),
     WriteFloorIndicator(u8),
@@ -38,6 +39,7 @@ impl Command {
     fn decode(data: &[u8]) -> Self {
         assert_eq!(data.len(), 4);
         match data[0] {
+            0 => Command::Reserved,
             1 => Command::WriteMotorDirection(ElevatorDirection::decode(data[1])),
             2 => Command::WriteOrderButtonLight(ButtonType::decode(data[1]), data[2], data[3] != 0),
             3 => Command::WriteFloorIndicator(data[1]),
