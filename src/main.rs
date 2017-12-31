@@ -24,6 +24,8 @@ pub enum ElevatorDirection{
 
 pub struct ElevatorInterface(*const comedi_t);
 
+unsafe impl Send for ElevatorInterface {}
+
 impl ElevatorInterface {
     const MOTOR_SPEED: u32 = 2800;
     
@@ -53,6 +55,33 @@ impl ElevatorInterface {
                     comedi_data_write(self.0, channel::MOTOR >> 8, channel::MOTOR & 0xff, 0, 0, 0);
                 },
             }
+        }
+    }
+
+    fn read_floorsensor(&self) -> Option<u8> {
+        unsafe {
+            let mut data: libc::c_uint = 0;
+            comedi_dio_read(self.0, channel::SENSOR_FLOOR0 >> 8, channel::SENSOR_FLOOR0 & 0xff, &mut data);
+            if (data != 0) {
+                return Some(0);
+            }
+            
+            comedi_dio_read(self.0, channel::SENSOR_FLOOR1 >> 8, channel::SENSOR_FLOOR1 & 0xff, &mut data);
+            if (data != 0) {
+                return Some(1);
+            }
+            
+            comedi_dio_read(self.0, channel::SENSOR_FLOOR2 >> 8, channel::SENSOR_FLOOR2 & 0xff, &mut data);
+            if (data != 0) {
+                return Some(2);
+            }
+            
+            comedi_dio_read(self.0, channel::SENSOR_FLOOR3 >> 8, channel::SENSOR_FLOOR3 & 0xff, &mut data);
+            if (data != 0) {
+                return Some(3);
+            }
+            
+            None
         }
     }
         
