@@ -55,9 +55,3 @@ pub(crate) const LIGHT_FLOOR_IND0: c_uint =(0x300+0);
 
 //out port 0
 pub(crate) const MOTOR: c_uint = (0x100+0);
-
-//non-existing ports (for alignment)
-pub(crate) const BUTTON_DOWN0: c_uint = -1i32 as c_uint;
-pub(crate) const BUTTON_UP3: c_uint = -1i32 as c_uint;
-pub(crate) const LIGHT_DOWN0: c_uint = -1i32 as c_uint;
-pub(crate) const LIGHT_UP3: c_uint = -1i32 as c_uint;
