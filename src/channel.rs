@@ -23,10 +23,10 @@ pub(crate) const BUTTON_DOWN2: c_uint = (0x200+0);
 pub(crate) const BUTTON_UP3: c_uint = (0x200+1);
 pub(crate) const BUTTON_DOWN3: c_uint = (0x200+2);
 pub(crate) const BUTTON_DOWN4: c_uint = (0x200+3);
-pub(crate) const SENSOR_FLOOR1: c_uint = (0x200+4);
-pub(crate) const SENSOR_FLOOR2: c_uint = (0x200+5);
-pub(crate) const SENSOR_FLOOR3: c_uint = (0x200+6);
-pub(crate) const SENSOR_FLOOR4: c_uint = (0x200+7);
+pub(crate) const SENSOR_FLOOR0: c_uint = (0x200+4);
+pub(crate) const SENSOR_FLOOR1: c_uint = (0x200+5);
+pub(crate) const SENSOR_FLOOR2: c_uint = (0x200+6);
+pub(crate) const SENSOR_FLOOR3: c_uint = (0x200+7);
 
 //out port 3
 pub(crate) const PORT_3_SUBDEVICE: c_uint = 3;
