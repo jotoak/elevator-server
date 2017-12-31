@@ -6,6 +6,9 @@ extern crate lazy_static;
 #[cfg(test)]
 extern crate rand;
 
+use std::io::{Read, Write};
+
+use std::net::{TcpListener, TcpStream};
 use std::ffi::CString;
 
 mod channel;
@@ -210,7 +213,40 @@ impl ElevatorInterface {
 }
 
 fn main() {
-    let interface = ElevatorInterface::open("/dev/comedi0").unwrap();
+    println!("Driver server started");
+    let elevator = ElevatorInterface::open("/dev/comedi0").unwrap();
+    let (mut stream, _addr) = TcpListener::bind("localhost:15657").unwrap().accept().unwrap();
+    println!("Client connected with server");
+    
+    loop {
+        let mut received_data = [0u8; 4];
+        stream.read_exact(&mut received_data).unwrap();
+        let command = Command::decode(&received_data);
+        
+        match command {
+            Command::Reserved => (),
+            Command::WriteMotorDirection(dir) => elevator.set_direction(dir),
+            Command::WriteOrderButtonLight(button, floor, state) => elevator.set_order_button_light(button, floor, state),
+            Command::WriteFloorIndicator(floor) => unimplemented!(),
+            Command::WriteDoorOpenLight(state) => unimplemented!(),
+            Command::WriteStopButtonLight(state) => elevator.set_stop_button_light(state),
+            Command::ReadOrderButton(button, floor) => {
+                let response_data = [6u8, elevator.read_order_button(button, floor) as u8, 0, 0];
+                stream.write_all(&response_data);
+            },
+            Command::ReadFloorSensor => {
+                let response_data = match elevator.read_floor_sensor() {
+                    Some(floor) => [7u8, 1, floor, 0],
+                    None => [7u8, 0, 0, 0],
+                };
+                stream.write_all(&response_data);
+            },
+            Command::ReadStopButton => unimplemented!(),
+            Command::ReadObstructionSwitch => unimplemented!(),
+
+        }
+
+    }
 }
 
 #[cfg(test)]
