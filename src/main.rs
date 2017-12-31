@@ -3,6 +3,8 @@ extern crate libc;
 #[cfg(test)]
 #[macro_use]
 extern crate lazy_static;
+#[cfg(test)]
+extern crate rand;
 
 use std::ffi::CString;
 
@@ -25,6 +27,14 @@ pub enum ElevatorDirection{
     Down,
     Stop,
 }
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+enum ButtonType {
+    HallUp,
+    HallDown,
+    Cab,
+}
+
 
 pub struct ElevatorInterface(*const comedi_t);
 
@@ -89,7 +99,46 @@ impl ElevatorInterface {
             None
         }
     }
-        
+
+    fn set_floor_button_lamp(&self, button_type: ButtonType, floor: u8, on_not_off: bool) {
+        assert!(floor < ElevatorInterface::N_FLOORS);
+        unsafe {
+            match (button_type, floor) {
+                (ButtonType::HallUp, 0) => comedi_dio_write(self.0, channel::LIGHT_UP0 >> 8, channel::LIGHT_UP0 & 0xff, on_not_off as libc::c_uint),
+                (ButtonType::Cab, 0) => comedi_dio_write(self.0, channel::LIGHT_COMMAND0 >> 8, channel::LIGHT_COMMAND0 & 0xff, on_not_off as libc::c_uint),
+                (ButtonType::HallUp, 1) => comedi_dio_write(self.0, channel::LIGHT_UP1 >> 8, channel::LIGHT_UP1 & 0xff, on_not_off as libc::c_uint),
+                (ButtonType::HallDown, 1) => comedi_dio_write(self.0, channel::LIGHT_DOWN1 >> 8, channel::LIGHT_DOWN1 & 0xff, on_not_off as libc::c_uint),
+                (ButtonType::Cab, 1) => comedi_dio_write(self.0, channel::LIGHT_COMMAND1 >> 8, channel::LIGHT_COMMAND1 & 0xff, on_not_off as libc::c_uint),
+                (ButtonType::HallUp, 2) => comedi_dio_write(self.0, channel::LIGHT_UP2 >> 8, channel::LIGHT_UP2 & 0xff, on_not_off as libc::c_uint),
+                (ButtonType::HallDown, 2) => comedi_dio_write(self.0, channel::LIGHT_DOWN2 >> 8, channel::LIGHT_DOWN2 & 0xff, on_not_off as libc::c_uint),
+                (ButtonType::Cab, 2) => comedi_dio_write(self.0, channel::LIGHT_COMMAND2 >> 8, channel::LIGHT_COMMAND2 & 0xff, on_not_off as libc::c_uint),
+                (ButtonType::HallDown, 3) => comedi_dio_write(self.0, channel::LIGHT_DOWN3 >> 8, channel::LIGHT_DOWN3 & 0xff, on_not_off as libc::c_uint),
+                (ButtonType::Cab, 3) => comedi_dio_write(self.0, channel::LIGHT_COMMAND3 >> 8, channel::LIGHT_COMMAND3 & 0xff, on_not_off as libc::c_uint),
+                (b, f) => panic!("You tried to set lamp in non-existing button: {:?}:{} <button:floor>", b, f), //TODO: implement display for ButtonType
+            };
+        }
+    }
+
+    fn read_floor_button(&self, button_type: ButtonType, floor: u8) -> bool {
+        assert!(floor < ElevatorInterface::N_FLOORS);
+        unsafe {
+            let mut data: libc::c_uint = 0;
+            match (button_type, floor) {
+                (ButtonType::HallUp, 0) => comedi_dio_read(self.0, channel::BUTTON_UP0 >> 8, channel::BUTTON_UP0 & 0xff, &mut data),
+                (ButtonType::Cab, 0) => comedi_dio_read(self.0, channel::BUTTON_COMMAND0 >> 8, channel::BUTTON_COMMAND0 & 0xff, &mut data),
+                (ButtonType::HallUp, 1) => comedi_dio_read(self.0, channel::BUTTON_UP1 >> 8, channel::BUTTON_UP1 & 0xff, &mut data),
+                (ButtonType::HallDown, 1) => comedi_dio_read(self.0, channel::BUTTON_DOWN1 >> 8, channel::BUTTON_DOWN1 & 0xff, &mut data),
+                (ButtonType::Cab, 1) => comedi_dio_read(self.0, channel::BUTTON_COMMAND1 >> 8, channel::BUTTON_COMMAND1 & 0xff, &mut data),
+                (ButtonType::HallUp, 2) => comedi_dio_read(self.0, channel::BUTTON_UP2 >> 8, channel::BUTTON_UP2 & 0xff, &mut data),
+                (ButtonType::HallDown, 2) => comedi_dio_read(self.0, channel::BUTTON_DOWN2 >> 8, channel::BUTTON_DOWN2 & 0xff, &mut data),
+                (ButtonType::Cab, 2) => comedi_dio_read(self.0, channel::BUTTON_COMMAND2 >> 8, channel::BUTTON_COMMAND2 & 0xff, &mut data),
+                (ButtonType::HallDown, 3) => comedi_dio_read(self.0, channel::BUTTON_DOWN3 >> 8, channel::BUTTON_DOWN3 & 0xff, &mut data),
+                (ButtonType::Cab, 3) => comedi_dio_read(self.0, channel::BUTTON_COMMAND3 >> 8, channel::BUTTON_COMMAND3 & 0xff, &mut data),
+                (b, f) => panic!("You tried to set lamp in non-existing button: {:?}:{} <button:floor>", b, f), //TODO: implement display for ButtonType
+            };
+            data != 0
+        }
+    }
 }
 
 fn main() {
@@ -101,6 +150,8 @@ mod tests {
     use *;
 
     use std::sync::Mutex;
+    use std::thread;
+    use std::time::Duration;
 
     // These tests are executed on an actual elevator. To make sure only one test is run at the same time, the elevator is protected by this mutex.
     lazy_static! {
@@ -125,4 +176,50 @@ mod tests {
         while elevator.read_floorsensor() != Some(ElevatorInterface::N_FLOORS-2) {}
         elevator.set_direction(ElevatorDirection::Stop);
     }
+    
+    #[test]
+    fn test_cab_buttons() {
+        let elevator = ELEVATOR.lock().unwrap();
+
+        for i in rand::seq::sample_indices(&mut rand::thread_rng(), ElevatorInterface::N_FLOORS as usize, ElevatorInterface::N_FLOORS as usize).into_iter() {
+            elevator.set_floor_button_lamp(ButtonType::Cab, i as u8, true);
+            thread::sleep(Duration::new(0, 200000000));
+            elevator.set_floor_button_lamp(ButtonType::Cab, i as u8, false);
+            thread::sleep(Duration::new(0, 200000000));
+            elevator.set_floor_button_lamp(ButtonType::Cab, i as u8, true);
+            while !elevator.read_floor_button(ButtonType::Cab, i as u8) {}
+            elevator.set_floor_button_lamp(ButtonType::Cab, i as u8, false);
+        }
+    }
+
+    #[test]
+    fn test_hall_up_buttons() {
+        let elevator = ELEVATOR.lock().unwrap();
+
+        for i in rand::seq::sample_indices(&mut rand::thread_rng(), ElevatorInterface::N_FLOORS as usize - 1, ElevatorInterface::N_FLOORS as usize - 1).into_iter() {
+            elevator.set_floor_button_lamp(ButtonType::HallUp, i as u8, true);
+            thread::sleep(Duration::new(0, 200000000));
+            elevator.set_floor_button_lamp(ButtonType::HallUp, i as u8, false);
+            thread::sleep(Duration::new(0, 200000000));
+            elevator.set_floor_button_lamp(ButtonType::HallUp, i as u8, true);
+            while !elevator.read_floor_button(ButtonType::HallUp, i as u8) {}
+            elevator.set_floor_button_lamp(ButtonType::HallUp, i as u8, false);
+        }
+    }
+
+    #[test]
+    fn test_hall_down_buttons() {
+        let elevator = ELEVATOR.lock().unwrap();
+
+        for i in rand::seq::sample_indices(&mut rand::thread_rng(), ElevatorInterface::N_FLOORS as usize - 1, ElevatorInterface::N_FLOORS as usize - 1).into_iter() {
+            elevator.set_floor_button_lamp(ButtonType::HallDown, i as u8 + 1, true);
+            thread::sleep(Duration::new(0, 200000000));
+            elevator.set_floor_button_lamp(ButtonType::HallDown, i as u8 + 1, false);
+            thread::sleep(Duration::new(0, 200000000));
+            elevator.set_floor_button_lamp(ButtonType::HallDown, i as u8 + 1, true);
+            while !elevator.read_floor_button(ButtonType::HallDown, i as u8 + 1) {}
+            elevator.set_floor_button_lamp(ButtonType::HallDown, i as u8 + 1, false);
+        }
+    }
+
 }
