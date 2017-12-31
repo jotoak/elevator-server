@@ -5,3 +5,6 @@ authors = ["Kjetil Kjeka"]
 
 [dependencies]
 libc = "0.2.34"
+
+[dev-dependencies]
+lazy_static = "1.0"

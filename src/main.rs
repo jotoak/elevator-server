@@ -1,5 +1,9 @@
 extern crate libc;
 
+#[cfg(test)]
+#[macro_use]
+extern crate lazy_static;
+
 use std::ffi::CString;
 
 mod channel;
@@ -28,6 +32,7 @@ unsafe impl Send for ElevatorInterface {}
 
 impl ElevatorInterface {
     const MOTOR_SPEED: u32 = 2800;
+    const N_FLOORS: u8 = 4;
     
     fn open(interface_name: &str) -> Result<Self, ()> {
         unsafe {
@@ -94,10 +99,29 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use *;
+
+    use std::sync::Mutex;
+
+    // These tests are executed on an actual elevator. To make sure only one test is run at the same time, the elevator is protected by this mutex.
+    lazy_static! {
+        static ref ELEVATOR: Mutex<ElevatorInterface> = Mutex::new(ElevatorInterface::open("/dev/comedi0").unwrap());
+    }
+    
     
     #[test]
-    fn open_comedi_device() {
-        let comedi = unsafe{ comedi_open(CString::new("/dev/comedi0").unwrap().as_ptr()) };
-        assert!(!comedi.is_null());
+    fn init_elevator() {
+        ELEVATOR.lock().unwrap();
+    }
+
+    #[test]
+    fn test_run() {
+        let elevator = ELEVATOR.lock().unwrap();
+        elevator.set_direction(ElevatorDirection::Down);
+        while(elevator.read_floorsensor() != Some(0)) {}
+        elevator.set_direction(ElevatorDirection::Up);
+        while(elevator.read_floorsensor() != Some(ElevatorInterface::N_FLOORS-1)) {}
+        elevator.set_direction(ElevatorDirection::Down);
+        while(elevator.read_floorsensor() != Some(ElevatorInterface::N_FLOORS-2)) {}
+        elevator.set_direction(ElevatorDirection::Stop);
     }
 }
