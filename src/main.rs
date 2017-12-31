@@ -67,22 +67,22 @@ impl ElevatorInterface {
         unsafe {
             let mut data: libc::c_uint = 0;
             comedi_dio_read(self.0, channel::SENSOR_FLOOR0 >> 8, channel::SENSOR_FLOOR0 & 0xff, &mut data);
-            if (data != 0) {
+            if data != 0 {
                 return Some(0);
             }
             
             comedi_dio_read(self.0, channel::SENSOR_FLOOR1 >> 8, channel::SENSOR_FLOOR1 & 0xff, &mut data);
-            if (data != 0) {
+            if data != 0 {
                 return Some(1);
             }
             
             comedi_dio_read(self.0, channel::SENSOR_FLOOR2 >> 8, channel::SENSOR_FLOOR2 & 0xff, &mut data);
-            if (data != 0) {
+            if data != 0 {
                 return Some(2);
             }
             
             comedi_dio_read(self.0, channel::SENSOR_FLOOR3 >> 8, channel::SENSOR_FLOOR3 & 0xff, &mut data);
-            if (data != 0) {
+            if data != 0 {
                 return Some(3);
             }
             
@@ -116,12 +116,13 @@ mod tests {
     #[test]
     fn test_run() {
         let elevator = ELEVATOR.lock().unwrap();
+        println!("The elevator will now do a run from the bottom floor to the top floor. It will stop in the floor below the top floor");
         elevator.set_direction(ElevatorDirection::Down);
-        while(elevator.read_floorsensor() != Some(0)) {}
+        while elevator.read_floorsensor() != Some(0) {}
         elevator.set_direction(ElevatorDirection::Up);
-        while(elevator.read_floorsensor() != Some(ElevatorInterface::N_FLOORS-1)) {}
+        while elevator.read_floorsensor() != Some(ElevatorInterface::N_FLOORS-1) {}
         elevator.set_direction(ElevatorDirection::Down);
-        while(elevator.read_floorsensor() != Some(ElevatorInterface::N_FLOORS-2)) {}
+        while elevator.read_floorsensor() != Some(ElevatorInterface::N_FLOORS-2) {}
         elevator.set_direction(ElevatorDirection::Stop);
     }
 }
