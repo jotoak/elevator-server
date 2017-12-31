@@ -125,7 +125,7 @@ impl ElevatorInterface {
         }
     }
 
-    fn read_floorsensor(&self) -> Option<u8> {
+    fn read_floor_sensor(&self) -> Option<u8> {
         unsafe {
             let mut data: libc::c_uint = 0;
             comedi_dio_read(self.0, channel::SENSOR_FLOOR0 >> 8, channel::SENSOR_FLOOR0 & 0xff, &mut data);
@@ -152,7 +152,7 @@ impl ElevatorInterface {
         }
     }
 
-    fn set_floor_button_lamp(&self, button_type: ButtonType, floor: u8, on_not_off: bool) {
+    fn set_order_button_light(&self, button_type: ButtonType, floor: u8, on_not_off: bool) {
         assert!(floor < ElevatorInterface::N_FLOORS);
         unsafe {
             match (button_type, floor) {
@@ -171,7 +171,7 @@ impl ElevatorInterface {
         }
     }
 
-    fn read_floor_button(&self, button_type: ButtonType, floor: u8) -> bool {
+    fn read_order_button(&self, button_type: ButtonType, floor: u8) -> bool {
         assert!(floor < ElevatorInterface::N_FLOORS);
         unsafe {
             let mut data: libc::c_uint = 0;
@@ -192,7 +192,7 @@ impl ElevatorInterface {
         }
     }
 
-    fn set_stop_button_lamp(&self, on_not_off: bool) {
+    fn set_stop_button_light(&self, on_not_off: bool) {
         unsafe {
             comedi_dio_write(self.0, channel::LIGHT_STOP >> 8, channel::LIGHT_STOP & 0xff, on_not_off as libc::c_uint);
         }
@@ -235,11 +235,11 @@ mod tests {
         let elevator = ELEVATOR.lock().unwrap();
         println!("The elevator will now do a run from the bottom floor to the top floor. It will stop in the floor below the top floor");
         elevator.set_direction(ElevatorDirection::Down);
-        while elevator.read_floorsensor() != Some(0) {}
+        while elevator.read_floor_sensor() != Some(0) {}
         elevator.set_direction(ElevatorDirection::Up);
-        while elevator.read_floorsensor() != Some(ElevatorInterface::N_FLOORS-1) {}
+        while elevator.read_floor_sensor() != Some(ElevatorInterface::N_FLOORS-1) {}
         elevator.set_direction(ElevatorDirection::Down);
-        while elevator.read_floorsensor() != Some(ElevatorInterface::N_FLOORS-2) {}
+        while elevator.read_floor_sensor() != Some(ElevatorInterface::N_FLOORS-2) {}
         elevator.set_direction(ElevatorDirection::Stop);
     }
     
@@ -248,13 +248,13 @@ mod tests {
         let elevator = ELEVATOR.lock().unwrap();
 
         for i in rand::seq::sample_indices(&mut rand::thread_rng(), ElevatorInterface::N_FLOORS as usize, ElevatorInterface::N_FLOORS as usize).into_iter() {
-            elevator.set_floor_button_lamp(ButtonType::Cab, i as u8, true);
+            elevator.set_order_button_light(ButtonType::Cab, i as u8, true);
             thread::sleep(Duration::new(0, 200000000));
-            elevator.set_floor_button_lamp(ButtonType::Cab, i as u8, false);
+            elevator.set_order_button_light(ButtonType::Cab, i as u8, false);
             thread::sleep(Duration::new(0, 200000000));
-            elevator.set_floor_button_lamp(ButtonType::Cab, i as u8, true);
-            while !elevator.read_floor_button(ButtonType::Cab, i as u8) {}
-            elevator.set_floor_button_lamp(ButtonType::Cab, i as u8, false);
+            elevator.set_order_button_light(ButtonType::Cab, i as u8, true);
+            while !elevator.read_order_button(ButtonType::Cab, i as u8) {}
+            elevator.set_order_button_light(ButtonType::Cab, i as u8, false);
         }
     }
 
@@ -263,13 +263,13 @@ mod tests {
         let elevator = ELEVATOR.lock().unwrap();
 
         for i in rand::seq::sample_indices(&mut rand::thread_rng(), ElevatorInterface::N_FLOORS as usize - 1, ElevatorInterface::N_FLOORS as usize - 1).into_iter() {
-            elevator.set_floor_button_lamp(ButtonType::HallUp, i as u8, true);
+            elevator.set_order_button_light(ButtonType::HallUp, i as u8, true);
             thread::sleep(Duration::new(0, 200000000));
-            elevator.set_floor_button_lamp(ButtonType::HallUp, i as u8, false);
+            elevator.set_order_button_light(ButtonType::HallUp, i as u8, false);
             thread::sleep(Duration::new(0, 200000000));
-            elevator.set_floor_button_lamp(ButtonType::HallUp, i as u8, true);
-            while !elevator.read_floor_button(ButtonType::HallUp, i as u8) {}
-            elevator.set_floor_button_lamp(ButtonType::HallUp, i as u8, false);
+            elevator.set_order_button_light(ButtonType::HallUp, i as u8, true);
+            while !elevator.read_order_button(ButtonType::HallUp, i as u8) {}
+            elevator.set_order_button_light(ButtonType::HallUp, i as u8, false);
         }
     }
 
@@ -278,13 +278,13 @@ mod tests {
         let elevator = ELEVATOR.lock().unwrap();
 
         for i in rand::seq::sample_indices(&mut rand::thread_rng(), ElevatorInterface::N_FLOORS as usize - 1, ElevatorInterface::N_FLOORS as usize - 1).into_iter() {
-            elevator.set_floor_button_lamp(ButtonType::HallDown, i as u8 + 1, true);
+            elevator.set_order_button_light(ButtonType::HallDown, i as u8 + 1, true);
             thread::sleep(Duration::new(0, 200000000));
-            elevator.set_floor_button_lamp(ButtonType::HallDown, i as u8 + 1, false);
+            elevator.set_order_button_light(ButtonType::HallDown, i as u8 + 1, false);
             thread::sleep(Duration::new(0, 200000000));
-            elevator.set_floor_button_lamp(ButtonType::HallDown, i as u8 + 1, true);
-            while !elevator.read_floor_button(ButtonType::HallDown, i as u8 + 1) {}
-            elevator.set_floor_button_lamp(ButtonType::HallDown, i as u8 + 1, false);
+            elevator.set_order_button_light(ButtonType::HallDown, i as u8 + 1, true);
+            while !elevator.read_order_button(ButtonType::HallDown, i as u8 + 1) {}
+            elevator.set_order_button_light(ButtonType::HallDown, i as u8 + 1, false);
         }
     }
 
@@ -292,13 +292,13 @@ mod tests {
     fn test_stop_button() {
         let elevator = ELEVATOR.lock().unwrap();
         
-        elevator.set_stop_button_lamp(true);
+        elevator.set_stop_button_light(true);
         thread::sleep(Duration::new(0, 200000000));
-        elevator.set_stop_button_lamp(false);
+        elevator.set_stop_button_light(false);
         thread::sleep(Duration::new(0, 200000000));
-        elevator.set_stop_button_lamp(true);
+        elevator.set_stop_button_light(true);
         while !elevator.read_stop_button() {}
-        elevator.set_stop_button_lamp(false);
+        elevator.set_stop_button_light(false);
     }
 
 }
