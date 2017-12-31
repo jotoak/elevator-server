@@ -22,10 +22,51 @@ extern "C" {
     fn comedi_data_read(it: *const comedi_t, subd: libc::c_uint, chan: libc::c_uint, range: libc::c_uint, aref: libc::c_uint, data: *mut libc::c_uint) -> libc::c_int;
 }
 
+enum Command {
+    WriteMotorDirection(ElevatorDirection),
+    WriteOrderButtonLight(ButtonType, u8, bool),
+    WriteFloorIndicator(u8),
+    WriteDoorOpenLight(bool),
+    WriteStopButtonLight(bool),
+    ReadOrderButton(ButtonType, u8),
+    ReadFloorSensor,
+    ReadStopButton,
+    ReadObstructionSwitch,
+}
+
+impl Command {
+    fn decode(data: &[u8]) -> Self {
+        assert_eq!(data.len(), 4);
+        match data[0] {
+            1 => Command::WriteMotorDirection(ElevatorDirection::decode(data[1])),
+            2 => Command::WriteOrderButtonLight(ButtonType::decode(data[1]), data[2], data[3] != 0),
+            3 => Command::WriteFloorIndicator(data[1]),
+            4 => Command::WriteDoorOpenLight(data[1] != 0),
+            5 => Command::WriteStopButtonLight(data[1] != 0),
+            6 => Command::ReadOrderButton(ButtonType::decode(data[1]), data[2]),
+            7 => Command::ReadFloorSensor,
+            8 => Command::ReadStopButton,
+            9 => Command::ReadObstructionSwitch,
+            x => panic!("Not a valid command code: {}", x),
+        }
+    }
+}
+
 pub enum ElevatorDirection{
     Up,
     Down,
     Stop,
+}
+
+impl ElevatorDirection {
+    fn decode(data: u8) -> Self {
+        match data {
+            0 => ElevatorDirection::Stop,
+            1 => ElevatorDirection::Up,
+            255 => ElevatorDirection::Down,
+            x => panic!("Not a valid direction code: {}", x),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -33,6 +74,17 @@ enum ButtonType {
     HallUp,
     HallDown,
     Cab,
+}
+
+impl ButtonType {
+    fn decode(data: u8) -> Self {
+        match data {
+            0 => ButtonType::HallUp,
+            1 => ButtonType::HallDown,
+            2 => ButtonType::Cab,
+            x => panic!("Not a valid ButtonType code: {}", x),
+        }
+    }
 }
 
 
