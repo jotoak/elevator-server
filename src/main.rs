@@ -268,7 +268,16 @@ mod tests {
 
     // These tests are executed on an actual elevator. To make sure only one test is run at the same time, the elevator is protected by this mutex.
     lazy_static! {
-        static ref ELEVATOR: Mutex<ElevatorInterface> = Mutex::new(ElevatorInterface::open("/dev/comedi0").unwrap());
+        static ref ELEVATOR: Mutex<ElevatorInterface> = {
+            let elevator = ElevatorInterface::open("/dev/comedi0").unwrap();
+
+            for f in 0..ElevatorInterface::N_FLOORS { elevator.set_order_button_light(ButtonType::Cab, f, false); }
+            for f in 1..ElevatorInterface::N_FLOORS { elevator.set_order_button_light(ButtonType::HallDown, f, false); }
+            for f in 0..ElevatorInterface::N_FLOORS-1 { elevator.set_order_button_light(ButtonType::HallUp, f, false); }
+            elevator.set_stop_button_light(false);
+            
+            Mutex::new(elevator)
+        };
     }
     
     
