@@ -186,7 +186,7 @@ impl ElevatorInterface {
     }
 
     fn read_order_button(&self, button_type: ButtonType, floor: u8) -> bool {
-        assert!(floor < ElevatorInterface::N_FLOORS);
+        assert!(floor < 4);
         unsafe {
             let mut data: libc::c_uint = 0;
             match (button_type, floor) {
@@ -219,6 +219,14 @@ impl ElevatorInterface {
             data != 0
         }
     }
+
+    fn set_floor_indicator(&self, floor: u8) {
+        assert!(floor < 4);
+        unsafe {
+            comedi_dio_write(self.0, channel::LIGHT_FLOOR_IND0 >> 8, channel::LIGHT_FLOOR_IND0 & 0xff, ((floor & 1<<1) != 0) as u32);
+            comedi_dio_write(self.0, channel::LIGHT_FLOOR_IND1 >> 8, channel::LIGHT_FLOOR_IND1 & 0xff, ((floor & 1<<0) != 0) as u32);
+        }
+    }
 }
 
 fn main() {
@@ -236,7 +244,7 @@ fn main() {
             Command::Reserved => (),
             Command::WriteMotorDirection(dir) => elevator.set_direction(dir),
             Command::WriteOrderButtonLight(button, floor, state) => elevator.set_order_button_light(button, floor, state),
-            Command::WriteFloorIndicator(floor) => unimplemented!(),
+            Command::WriteFloorIndicator(floor) => elevator.set_floor_indicator(floor),
             Command::WriteDoorOpenLight(state) => unimplemented!(),
             Command::WriteStopButtonLight(state) => elevator.set_stop_button_light(state),
             Command::ReadOrderButton(button, floor) => {
@@ -291,11 +299,22 @@ mod tests {
         let elevator = ELEVATOR.lock().unwrap();
         println!("The elevator will now do a run from the bottom floor to the top floor. It will stop in the floor below the top floor");
         elevator.set_direction(ElevatorDirection::Down);
-        while elevator.read_floor_sensor() != Some(0) {}
+        while elevator.read_floor_sensor() != Some(0) {
+            if let Some(floor) = elevator.read_floor_sensor() {
+                elevator.set_floor_indicator(floor);
+            }
+        }
+        elevator.set_floor_indicator(0);
         elevator.set_direction(ElevatorDirection::Up);
-        while elevator.read_floor_sensor() != Some(ElevatorInterface::N_FLOORS-1) {}
+        while elevator.read_floor_sensor() != Some(ElevatorInterface::N_FLOORS-1) {
+            if let Some(floor) = elevator.read_floor_sensor() {
+                elevator.set_floor_indicator(floor);
+            }
+        }
+        elevator.set_floor_indicator(ElevatorInterface::N_FLOORS-1);
         elevator.set_direction(ElevatorDirection::Down);
         while elevator.read_floor_sensor() != Some(ElevatorInterface::N_FLOORS-2) {}
+        elevator.set_floor_indicator(ElevatorInterface::N_FLOORS-2);
         elevator.set_direction(ElevatorDirection::Stop);
     }
     
