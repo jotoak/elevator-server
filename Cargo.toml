@@ -1,7 +1,10 @@
 [package]
-name = "ttk4145_hw_server"
+name = "ttk4145_elevator_server"
 version = "0.1.0"
 authors = ["Kjetil Kjeka"]
+
+[[bin]]
+name = "elevator_server"
 
 [dependencies]
 libc = "0.2.34"

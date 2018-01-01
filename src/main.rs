@@ -251,7 +251,7 @@ impl Drop for ElevatorInterface {
 
 
 fn main() {
-    println!("Driver server started");
+    println!("Elevator server started");
     let (mut stream, _addr) = TcpListener::bind("localhost:15657").unwrap().accept().unwrap();
     let elevator = ElevatorInterface::open("/dev/comedi0").unwrap();
     println!("Client connected with server");
