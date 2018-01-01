@@ -19,6 +19,7 @@ enum comedi_t {}
 #[link(name = "comedi")]
 extern "C" {
     fn comedi_open(interface_name: *const libc::c_char) -> *const comedi_t;
+    fn comedi_dio_config(it: *const comedi_t, subd: libc::c_uint, chan: libc::c_uint, dir: libc::c_uint) -> libc::c_int;
     fn comedi_dio_write(it: *const comedi_t, subd: libc::c_uint, chan: libc::c_uint, bit: libc::c_uint) -> libc::c_int;
     fn comedi_dio_read(it: *const comedi_t, subd: libc::c_uint, chan: libc::c_uint, bit: *mut libc::c_uint) -> libc::c_int;
     fn comedi_data_write(it: *const comedi_t, subd: libc::c_uint, chan: libc::c_uint, range: libc::c_uint, aref: libc::c_uint, data: libc::c_uint) -> libc::c_int;
@@ -104,14 +105,22 @@ impl ElevatorInterface {
     fn open(interface_name: &str) -> Result<Self, ()> {
         unsafe {
             let comedi = comedi_open(CString::new(interface_name).unwrap().as_ptr());
+            
             if comedi.is_null() {
                 Err(())
             } else {
+                for i in 0..8 {
+                    comedi_dio_config(comedi, channel::PORT_1_SUBDEVICE, channel::PORT_1_CHANNEL_OFFSET + i, channel::PORT_1_DIRECTION);
+                    comedi_dio_config(comedi, channel::PORT_1_SUBDEVICE, channel::PORT_1_CHANNEL_OFFSET + i, channel::PORT_1_DIRECTION);
+                    comedi_dio_config(comedi, channel::PORT_1_SUBDEVICE, channel::PORT_1_CHANNEL_OFFSET + i, channel::PORT_1_DIRECTION);
+                    comedi_dio_config(comedi, channel::PORT_1_SUBDEVICE, channel::PORT_1_CHANNEL_OFFSET + i, channel::PORT_1_DIRECTION);
+                }
+                
                 Ok(ElevatorInterface(comedi))
             }
         }
     }
-
+    
     fn set_direction(&self, dir: ElevatorDirection) {
         unsafe {
             match dir {
