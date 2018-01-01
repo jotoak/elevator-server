@@ -243,6 +243,13 @@ impl ElevatorInterface {
     }
 }
 
+impl Drop for ElevatorInterface {
+    fn drop(&mut self) {
+        self.set_direction(ElevatorDirection::Stop);
+    }
+}
+
+
 fn main() {
     println!("Driver server started");
     let elevator = ElevatorInterface::open("/dev/comedi0").unwrap();
