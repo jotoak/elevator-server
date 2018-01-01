@@ -8,12 +8,13 @@ extern crate rand;
 
 use std::io::{Read, Write};
 
-use std::net::{TcpListener, TcpStream};
+use std::net::TcpListener;
 use std::ffi::CString;
 
 mod channel;
 
 /// This is a opaque rust equivalent for comedi_t inside libcomedi.h
+#[allow(non_camel_case_types)]
 enum comedi_t {}
 
 #[link(name = "comedi")]
@@ -23,7 +24,6 @@ extern "C" {
     fn comedi_dio_write(it: *const comedi_t, subd: libc::c_uint, chan: libc::c_uint, bit: libc::c_uint) -> libc::c_int;
     fn comedi_dio_read(it: *const comedi_t, subd: libc::c_uint, chan: libc::c_uint, bit: *mut libc::c_uint) -> libc::c_int;
     fn comedi_data_write(it: *const comedi_t, subd: libc::c_uint, chan: libc::c_uint, range: libc::c_uint, aref: libc::c_uint, data: libc::c_uint) -> libc::c_int;
-    fn comedi_data_read(it: *const comedi_t, subd: libc::c_uint, chan: libc::c_uint, range: libc::c_uint, aref: libc::c_uint, data: *mut libc::c_uint) -> libc::c_int;
 }
 
 enum Command {
@@ -252,8 +252,8 @@ impl Drop for ElevatorInterface {
 
 fn main() {
     println!("Driver server started");
-    let elevator = ElevatorInterface::open("/dev/comedi0").unwrap();
     let (mut stream, _addr) = TcpListener::bind("localhost:15657").unwrap().accept().unwrap();
+    let elevator = ElevatorInterface::open("/dev/comedi0").unwrap();
     println!("Client connected with server");
     
     loop {
@@ -270,22 +270,22 @@ fn main() {
             Command::WriteStopButtonLight(state) => elevator.set_stop_button_light(state),
             Command::ReadOrderButton(button, floor) => {
                 let response_data = [6u8, elevator.read_order_button(button, floor) as u8, 0, 0];
-                stream.write_all(&response_data);
+                stream.write_all(&response_data).unwrap();
             },
             Command::ReadFloorSensor => {
                 let response_data = match elevator.read_floor_sensor() {
                     Some(floor) => [7u8, 1, floor, 0],
                     None => [7u8, 0, 0, 0],
                 };
-                stream.write_all(&response_data);
+                stream.write_all(&response_data).unwrap();
             },
             Command::ReadStopButton => {
                 let response_data = [9u8, elevator.read_stop_button() as u8, 0, 0];
-                stream.write_all(&response_data);
+                stream.write_all(&response_data).unwrap();
             },
             Command::ReadObstructionSwitch => {
                 let response_data = [9u8, elevator.read_obstruction_sensor() as u8, 0, 0];
-                stream.write_all(&response_data);
+                stream.write_all(&response_data).unwrap();
             },
 
         }
