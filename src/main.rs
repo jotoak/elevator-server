@@ -227,6 +227,20 @@ impl ElevatorInterface {
             comedi_dio_write(self.0, channel::LIGHT_FLOOR_IND1 >> 8, channel::LIGHT_FLOOR_IND1 & 0xff, ((floor & 1<<0) != 0) as u32);
         }
     }
+
+    fn set_door_light(&self, on_not_off: bool) {
+        unsafe {
+            comedi_dio_write(self.0, channel::LIGHT_DOOR_OPEN >> 8, channel::LIGHT_DOOR_OPEN & 0xff, on_not_off as libc::c_uint);
+        }
+    }
+
+    fn read_obstruction_sensor(&self) -> bool {
+        unsafe {
+            let mut data: libc::c_uint = 0;
+            comedi_dio_read(self.0, channel::OBSTRUCTION >> 8, channel::OBSTRUCTION & 0xff, &mut data);
+            data != 0
+        }
+    }
 }
 
 fn main() {
@@ -245,7 +259,7 @@ fn main() {
             Command::WriteMotorDirection(dir) => elevator.set_direction(dir),
             Command::WriteOrderButtonLight(button, floor, state) => elevator.set_order_button_light(button, floor, state),
             Command::WriteFloorIndicator(floor) => elevator.set_floor_indicator(floor),
-            Command::WriteDoorOpenLight(state) => unimplemented!(),
+            Command::WriteDoorOpenLight(state) => elevator.set_door_light(state),
             Command::WriteStopButtonLight(state) => elevator.set_stop_button_light(state),
             Command::ReadOrderButton(button, floor) => {
                 let response_data = [6u8, elevator.read_order_button(button, floor) as u8, 0, 0];
@@ -258,8 +272,14 @@ fn main() {
                 };
                 stream.write_all(&response_data);
             },
-            Command::ReadStopButton => unimplemented!(),
-            Command::ReadObstructionSwitch => unimplemented!(),
+            Command::ReadStopButton => {
+                let response_data = [9u8, elevator.read_stop_button() as u8, 0, 0];
+                stream.write_all(&response_data);
+            },
+            Command::ReadObstructionSwitch => {
+                let response_data = [9u8, elevator.read_obstruction_sensor() as u8, 0, 0];
+                stream.write_all(&response_data);
+            },
 
         }
 
@@ -374,6 +394,36 @@ mod tests {
         elevator.set_stop_button_light(true);
         while !elevator.read_stop_button() {}
         elevator.set_stop_button_light(false);
+    }
+
+    #[test]
+    fn door_test() {
+        let elevator = ELEVATOR.lock().unwrap();
+
+        for i in 0..4 {
+            elevator.set_door_light(true);
+            thread::sleep(Duration::new(0, 100000000));
+            elevator.set_door_light(false);
+            thread::sleep(Duration::new(0, 100000000));
+        }
+        
+        elevator.set_door_light(true);
+        while !elevator.read_obstruction_sensor() {}
+        thread::sleep(Duration::new(0, 500000000));
+        elevator.set_door_light(false);
+        while elevator.read_obstruction_sensor() {}
+        thread::sleep(Duration::new(0, 500000000));
+        elevator.set_door_light(true);
+        while !elevator.read_obstruction_sensor() {}
+        thread::sleep(Duration::new(0, 500000000));
+        elevator.set_door_light(false);
+        while elevator.read_obstruction_sensor() {}
+        thread::sleep(Duration::new(0, 500000000));
+        elevator.set_door_light(true);
+        while !elevator.read_obstruction_sensor() {}
+        thread::sleep(Duration::new(0, 500000000));
+        elevator.set_door_light(false);
+        while elevator.read_obstruction_sensor() {}
     }
 
 }
