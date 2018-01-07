@@ -2,6 +2,15 @@
 name = "ttk4145_elevator_server"
 version = "0.1.0"
 authors = ["Kjetil Kjeka"]
+repository = "https://github.com/TTK4145/elevator-server"
+
+description = "TCP based API for the elevator hardware at NTNU RealTime lab"
+
+keywords = ["TTK4145", "elevator"]
+categories = ["hardware-support"]
+
+license = "Unlicense"
+
 
 [[bin]]
 path = "src/main.rs"
