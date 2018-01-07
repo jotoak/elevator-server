@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Kjetil Kjeka"]
 
 [[bin]]
+path = "src/main.rs"
 name = "elevator_server"
 
 [dependencies]
