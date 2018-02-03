@@ -9,11 +9,14 @@ For this program to work elevator hardware needs to be connected through an io c
 #### Cargo & Rust
 To compile and install the elevator server, cargo and rust is needed. Both are best installed by using [rustup](https://www.rustup.rs/). 
 
+### HW Access
+For a process to access the io card (elevator hw) on the real time lab the user running the user running the process must be in the iocard group. To add user student to the iocard group run `sudo usermod -a -G iocard student`.
+
 ### Install
 If the software is not installed you can run `cargo install ttk4145_elevator_server` to run install it. If an old version is installed and you wish to upgrade to the newest version `cargo install --force ttk4145_elevator_server` will do.
 
 ### Run
-The server can be started by running `elevator_server`. Once started, the server will start listening on `localhost:15657`. You can then connect to it by using a [client](https://github.com/TTK4145/elevator-server/new/master?readme=1#clients) that adhers to [the protocol](https://github.com/TTK4145/elevator-server/new/master?readme=1#protocol).
+The server can be started by running `ElevatorServer`. Once started, the server will start listening on `localhost:15657`. You can then connect to it by using a [client](https://github.com/TTK4145/elevator-server/new/master?readme=1#clients) that adhers to [the protocol](https://github.com/TTK4145/elevator-server/new/master?readme=1#protocol).
 
 ### Clients
 
