@@ -1,6 +1,6 @@
 [package]
 name = "ttk4145_elevator_server"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Kjetil Kjeka"]
 repository = "https://github.com/TTK4145/elevator-server"
 
