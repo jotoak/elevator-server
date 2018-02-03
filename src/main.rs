@@ -254,11 +254,14 @@ fn main() {
     println!("Elevator server started");
     let (mut stream, _addr) = TcpListener::bind("localhost:15657").unwrap().accept().unwrap();
     let elevator = ElevatorInterface::open("/dev/comedi0").unwrap();
-    println!("Client connected with server");
+    println!("Client connected to server");
     
     loop {
         let mut received_data = [0u8; 4];
-        stream.read_exact(&mut received_data).unwrap();
+        if let Err(_) = stream.read_exact(&mut received_data) {
+            println!("Lost connection to client");
+            return;
+        }
         let command = Command::decode(&received_data);
         
         match command {
