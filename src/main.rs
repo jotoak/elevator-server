@@ -109,14 +109,19 @@ impl ElevatorInterface {
             if comedi.is_null() {
                 Err(())
             } else {
+	        let mut status = 0;
                 for i in 0..8 {
-                    comedi_dio_config(comedi, channel::PORT_1_SUBDEVICE, channel::PORT_1_CHANNEL_OFFSET + i, channel::PORT_1_DIRECTION);
-                    comedi_dio_config(comedi, channel::PORT_1_SUBDEVICE, channel::PORT_1_CHANNEL_OFFSET + i, channel::PORT_1_DIRECTION);
-                    comedi_dio_config(comedi, channel::PORT_1_SUBDEVICE, channel::PORT_1_CHANNEL_OFFSET + i, channel::PORT_1_DIRECTION);
-                    comedi_dio_config(comedi, channel::PORT_1_SUBDEVICE, channel::PORT_1_CHANNEL_OFFSET + i, channel::PORT_1_DIRECTION);
+                    status |= comedi_dio_config(comedi, channel::PORT_1_SUBDEVICE, i, channel::PORT_1_DIRECTION);
+                    status |= comedi_dio_config(comedi, channel::PORT_2_SUBDEVICE, i, channel::PORT_2_DIRECTION);
+                    status |= comedi_dio_config(comedi, channel::PORT_3_SUBDEVICE, i+8, channel::PORT_3_DIRECTION);
+                    status |= comedi_dio_config(comedi, channel::PORT_4_SUBDEVICE, i+16, channel::PORT_4_DIRECTION);
                 }
                 
-                Ok(ElevatorInterface(comedi))
+		if status == 0 {
+		    Ok(ElevatorInterface(comedi))
+		} else {
+		    Err(())
+                }
             }
         }
     }
