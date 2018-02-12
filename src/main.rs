@@ -177,12 +177,14 @@ impl ElevatorInterface {
             match (button_type, floor) {
                 (ButtonType::HallUp, 0) => comedi_dio_write(self.0, channel::LIGHT_UP0 >> 8, channel::LIGHT_UP0 & 0xff, on_not_off as libc::c_uint),
                 (ButtonType::Cab, 0) => comedi_dio_write(self.0, channel::LIGHT_COMMAND0 >> 8, channel::LIGHT_COMMAND0 & 0xff, on_not_off as libc::c_uint),
+		(ButtonType::HallDown, 0) => 0,
                 (ButtonType::HallUp, 1) => comedi_dio_write(self.0, channel::LIGHT_UP1 >> 8, channel::LIGHT_UP1 & 0xff, on_not_off as libc::c_uint),
                 (ButtonType::HallDown, 1) => comedi_dio_write(self.0, channel::LIGHT_DOWN1 >> 8, channel::LIGHT_DOWN1 & 0xff, on_not_off as libc::c_uint),
                 (ButtonType::Cab, 1) => comedi_dio_write(self.0, channel::LIGHT_COMMAND1 >> 8, channel::LIGHT_COMMAND1 & 0xff, on_not_off as libc::c_uint),
                 (ButtonType::HallUp, 2) => comedi_dio_write(self.0, channel::LIGHT_UP2 >> 8, channel::LIGHT_UP2 & 0xff, on_not_off as libc::c_uint),
                 (ButtonType::HallDown, 2) => comedi_dio_write(self.0, channel::LIGHT_DOWN2 >> 8, channel::LIGHT_DOWN2 & 0xff, on_not_off as libc::c_uint),
                 (ButtonType::Cab, 2) => comedi_dio_write(self.0, channel::LIGHT_COMMAND2 >> 8, channel::LIGHT_COMMAND2 & 0xff, on_not_off as libc::c_uint),
+		(ButtonType::HallUp, 3) => 0,
                 (ButtonType::HallDown, 3) => comedi_dio_write(self.0, channel::LIGHT_DOWN3 >> 8, channel::LIGHT_DOWN3 & 0xff, on_not_off as libc::c_uint),
                 (ButtonType::Cab, 3) => comedi_dio_write(self.0, channel::LIGHT_COMMAND3 >> 8, channel::LIGHT_COMMAND3 & 0xff, on_not_off as libc::c_uint),
                 (b, f) => panic!("You tried to set lamp in non-existing button: {:?}:{} <button:floor>", b, f), //TODO: implement display for ButtonType
@@ -197,12 +199,14 @@ impl ElevatorInterface {
             match (button_type, floor) {
                 (ButtonType::HallUp, 0) => comedi_dio_read(self.0, channel::BUTTON_UP0 >> 8, channel::BUTTON_UP0 & 0xff, &mut data),
                 (ButtonType::Cab, 0) => comedi_dio_read(self.0, channel::BUTTON_COMMAND0 >> 8, channel::BUTTON_COMMAND0 & 0xff, &mut data),
+		(ButtonType::HallDown, 0) => 0,
                 (ButtonType::HallUp, 1) => comedi_dio_read(self.0, channel::BUTTON_UP1 >> 8, channel::BUTTON_UP1 & 0xff, &mut data),
                 (ButtonType::HallDown, 1) => comedi_dio_read(self.0, channel::BUTTON_DOWN1 >> 8, channel::BUTTON_DOWN1 & 0xff, &mut data),
                 (ButtonType::Cab, 1) => comedi_dio_read(self.0, channel::BUTTON_COMMAND1 >> 8, channel::BUTTON_COMMAND1 & 0xff, &mut data),
                 (ButtonType::HallUp, 2) => comedi_dio_read(self.0, channel::BUTTON_UP2 >> 8, channel::BUTTON_UP2 & 0xff, &mut data),
                 (ButtonType::HallDown, 2) => comedi_dio_read(self.0, channel::BUTTON_DOWN2 >> 8, channel::BUTTON_DOWN2 & 0xff, &mut data),
                 (ButtonType::Cab, 2) => comedi_dio_read(self.0, channel::BUTTON_COMMAND2 >> 8, channel::BUTTON_COMMAND2 & 0xff, &mut data),
+		(ButtonType::HallUp, 3) => 0,
                 (ButtonType::HallDown, 3) => comedi_dio_read(self.0, channel::BUTTON_DOWN3 >> 8, channel::BUTTON_DOWN3 & 0xff, &mut data),
                 (ButtonType::Cab, 3) => comedi_dio_read(self.0, channel::BUTTON_COMMAND3 >> 8, channel::BUTTON_COMMAND3 & 0xff, &mut data),
                 (b, f) => panic!("You tried to set lamp in non-existing button: {:?}:{} <button:floor>", b, f), //TODO: implement display for ButtonType
