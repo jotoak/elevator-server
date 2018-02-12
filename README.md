@@ -16,7 +16,7 @@ For a process to access the io card (elevator hw) on the real time lab the user 
 If the software is not installed you can run `cargo install ttk4145_elevator_server` to run install it. If an old version is installed and you wish to upgrade to the newest version `cargo install --force ttk4145_elevator_server` will do.
 
 ### Run
-The server can be started by running `ElevatorServer`. Once started, the server will start listening on `localhost:15657`. You can then connect to it by using a [client](https://github.com/TTK4145/elevator-server/new/master?readme=1#clients) that adhers to [the protocol](https://github.com/TTK4145/elevator-server/new/master?readme=1#protocol).
+The server can be started by running `ElevatorServer`. Once started, the server will start listening on `localhost:15657`. You can then connect to it by using a [client](https://github.com/TTK4145/elevator-server/new/master?readme=1#clients) that adhers to [the protocol](https://github.com/TTK4145/elevator-server#protocol).
 
 ### Clients
 
