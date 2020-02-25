@@ -1,23 +1,30 @@
 # Elevator server
-In the [TTK4145 elevator project](https://github.com/TTK4145/Project) the elevator hardware is communicated with over TCP. Every elevator expose a server that clients (elevator logic) can connect to. This repo contains the code for the server part of the elevator interface.
+In the [TTK4145 elevator project](https://github.com/TTK4145/Project) the elevator hardware is controlled by a server, which exposes a TCP interface. This repository contains the source code for that server, as well as a download link to the executable.
 
 ## Executables
 
-[Executable for Linux can be found here](https://github.com/TTK4145/elevator-server/releases/latest)
+[The executable for Linux can be found here](https://github.com/TTK4145/elevator-server/releases/latest)
  
 The server should run in its own terminal, and should not need to be restarted if the client is restarted.
 
-Remember to `chmod +x ElevatorServer` in order to give yourself permission to run downloaded file.
+Remember to `chmod +x ElevatorServer` in order to give yourself permission to run the downloaded file.
 
 ## Usage
 ### Dependency of hardware & comedi
-For this program to work elevator hardware needs to be connected through an io card supported by comedi in the same way as it is in the NTNU real time lab. It is made specially to work with the elevator hardware in this lab, and it is not recommended to use this software for outside this lab. For a solution that will work outside the real time lab, have a look at [the simulator](https://github.com/TTK4145/Simulator-v2).
+For this program to work, elevator hardware needs to be connected through an IO card supported by Comedi in the same way as it is in the NTNU real time lab. It is made specifically to work with the elevator hardware in this lab, and it is not recommended to use this software outside this lab. For a solution that will work outside the real time lab, have a look at [the simulator](https://github.com/TTK4145/Simulator-v2).
 
-### Run
+If running the elevator server gives you a "Permission denied" error, it might be because the user you are logged in as is not part of the `iocard` group. To add user `student` to the iocard group, run `sudo usermod -a -G iocard student`.
+
+### Running
 The server can be started by running `./ElevatorServer`. Once started, the server will start listening on `localhost:15657`. You can then connect to it by using a [client](https://github.com/TTK4145?q=driver) that adheres to [the protocol](https://github.com/TTK4145/elevator-server#protocol).
 
-### Hardware access
-For a process to access the io card (elevator hw) on the real time lab the user running the process must be in the iocard group. To add user student to the iocard group run `sudo usermod -a -G iocard student`.
+
+### Building from source
+A short build script is included to compile the program:
+
+`./build.sh`
+
+The `ElevatorServer` executable generated is found in a new folder named `target`.
 
 ### Protocol
 
@@ -31,7 +38,6 @@ For a process to access the io card (elevator hw) on the real time lab the user 
         <tr>
             <td><strong>Writing</strong></td>
             <td align="center" colspan="4">Instruction</td>
-            <td align="center" colspan="0" rowspan="7"></td>
         </tr>
         <tr>
             <td><em>Reload config (file and args)</em></td>
