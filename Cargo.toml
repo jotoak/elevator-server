@@ -14,7 +14,7 @@ license = "Unlicense"
 
 [[bin]]
 path = "src/main.rs"
-name = "ElevatorServer"
+name = "elevator_server"
 
 [dependencies]
 libc = "0.2.34"
